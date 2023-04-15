@@ -10,7 +10,7 @@ use RenokiCo\PhpK8s\K8s;
 
 class RenokiCoKubernetesService implements KubernetesService
 {
-    private KubernetesCluster $cluster;
+    public KubernetesCluster $cluster;
     /**
      * Create a new class instance.
      *
@@ -22,11 +22,13 @@ class RenokiCoKubernetesService implements KubernetesService
     {
         $this->cluster = KubernetesCluster::inClusterConfiguration();
     }
-    public function generateName(string $scrapeId){
+    public function generateName(string $scrapeId)
+    {
         return "scraper-job-{$scrapeId}";
     }
 
-    public function createJob($scrapeId, $podCount){
+    public function createJob($scrapeId, $podCount)
+    {
         $jobName = $this->generateName($scrapeId);
         $container = K8s::container()
             ->setName('scraper-job')
@@ -37,7 +39,7 @@ class RenokiCoKubernetesService implements KubernetesService
 
         $pod = K8s::pod()
             ->setName('scraper-job')
-            ->setLabels(['job-name' => $jobName]) // needs job-name: pi so that ->getPods() can work
+            ->setLabels(['job-name' => $jobName])
             ->setContainers([$container])
             ->restartOnFailure();
 
@@ -49,7 +51,9 @@ class RenokiCoKubernetesService implements KubernetesService
             ->setSpec("backoffLimit: ", 3)
             ->setSpec("activeDeadlineSeconds: ", 20)
             ->setTemplate($pod);
+
         $job->create();
+
     }
     public function jobHasCompleted($scrapeId)
     {
@@ -61,10 +65,19 @@ class RenokiCoKubernetesService implements KubernetesService
         $job = $this->cluster->getJobByName($this->generateName($scrapeId));
         $duration = $job->getDurationInSeconds();
         foreach ($job->getPods() as $pod) {
-            // $pod->logs()
             $pod->delete();
         }
         $job->delete();
+        return $duration;
+    }
+    public function stopJobAndDelete($scrapeId)
+    {
+        $job = $this->cluster->getJobByName($this->generateName($scrapeId));
+        $job->delete();
+        foreach ($job->getPods() as $pod) {
+            $pod->delete();
+        }
+        $duration = $job->getDurationInSeconds();
         return $duration;
     }
 

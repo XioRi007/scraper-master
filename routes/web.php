@@ -16,41 +16,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-//     $redis = new \Redis();
-//     $redis->connect('redis-leader', 6379);
-//     $rsmq = new \Islambey\RSMQ\RSMQ($redis);
-//     $rsmq->createQueue('279d82cc-08a1-47c3-ad1f-965876388bba');
-
-
-// $cluster = KubernetesCluster::inClusterConfiguration();
-// $container = K8s::container()
-//     ->setName('scraper-job')
-//     ->setImage('xiori007/scraper-worker');
-// $container->setEnv([
-//         'SCRAPE_ID' => '279d82cc-08a1-47c3-ad1f-965876388bba',
-//     ]);
-
-// $pod = K8s::pod()
-//     ->setName('scraper-job')
-//     ->setLabels(['job-name' => 'scraper-job-279d82cc-08a1-47c3-ad1f-965876388bba']) // needs job-name: pi so that ->getPods() can work
-//     ->setContainers([$container])
-//     ->restartOnFailure();
-
-// $job = $cluster
-//     ->job()
-//     ->setName('scraper-job-279d82cc-08a1-47c3-ad1f-965876388bba')
-//     ->setSpec("parallelism", 2)
-//     ->setSpec("ttlSecondsAfterFinished: ", 20)
-//     ->setSpec("backoffLimit: ", 3)
-//     ->setTemplate($pod);
-
-//     try{
-//         $res = $job->create();
-//         dd($res);
-//     }catch(Exception $e){
-//         dd($e);
-//     }
-
+Route::get('/{any}', function () {
     return view('welcome');
-});
+    })->where("any",".*");

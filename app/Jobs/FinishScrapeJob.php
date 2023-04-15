@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class FinishScrapeJob implements ShouldQueue, ShouldBeUnique
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
     private string $scrapeId;
     /**
      * Create a new job instance.
@@ -41,11 +44,12 @@ class FinishScrapeJob implements ShouldQueue, ShouldBeUnique
      *
      * @return void
      */
-    public function handle(ScraperJobRepository $scraperJobRepository, KubernetesService $kubernetesService, Queue $queueService )
+    public function handle(ScraperJobRepository $scraperJobRepository, KubernetesService $kubernetesService, Queue $queueService)
     {
-        $duration = $kubernetesService->deleteJob($this->scrapeId);   
-        $scraperJobRepository->update($this->scrapeId, ['duration' => $duration, 'status'=>'finished']);
-        $queueService->deleteQueue($this->scrapeId);
-        Log::info("Job ".$this->scrapeId." was finished.");
+        if($kubernetesService->jobHasCompleted($this->scrapeId)) {
+            $duration = $kubernetesService->deleteJob($this->scrapeId);
+            $scraperJobRepository->update($this->scrapeId, ['duration' => $duration, 'status'=>'finished']);
+            $queueService->deleteQueue($this->scrapeId);
+        }
     }
 }
